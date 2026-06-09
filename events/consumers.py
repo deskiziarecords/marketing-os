@@ -1,29 +1,45 @@
 # events/consumers.py
 import logging
-from apps.billing.services import record_ai_usage
-from apps.analytics.services import update_ai_dashboard
+from ai.providers.service import generate_ai_content
+from apps.tenants.models import Tenant, Project
 
 logger = logging.getLogger(__name__)
 
-def handle_ai_generation_completed(event: 'DomainEvent'):
+def handle_lead_created(event):
     """
-    Este consumidor no sabe NADA de cómo se generó el contenido.
-    Solo sabe que ocurrió, y actualiza sus propios dominios.
+    Consumidor del evento 'lead.created'.
+    Aquí es donde la magia sucede: IA y Billing reaccionan sin que el CRM lo sepa.
     """
     payload = event.payload
+    tenant = Tenant.objects.get(id=event.tenant_id)
+    project = Project.objects.get(id=event.project_id)
     
-    # 1. Billing: Cobra al cliente por el uso (Metered Billing)
-    record_ai_usage(
-        tenant_id=event.tenant_id,
-        cost_usd=payload['cost_usd'],
-        tokens=payload['tokens']
-    )
+    logger.info(f"Procesando lead creado: {payload['name']}")
     
-    # 2. Analytics: Actualiza el dashboard de gasto de IA
-    update_ai_dashboard(
-        tenant_id=event.tenant_id,
-        model=payload['model'],
-        cost=payload['cost_usd']
-    )
+    # 1. La IA genera un mensaje de bienvenida personalizado
+    system_prompt = f"Eres el asistente virtual de {tenant.name}. Tono: profesional y cercano."
+    prompt = f"Redacta un correo de bienvenida corto para {payload['name']} ({payload['email']}) que acaba de registrarse."
     
-    logger.info(f"Evento ai.generation.completed procesado para Tenant {event.tenant_id}")
+    try:
+        welcome_email = generate_ai_content(
+            prompt=prompt,
+            system_prompt=system_prompt,
+            purpose='welcome_email_generation',
+            tenant=tenant,
+            project=project
+        )
+        logger.info(f"Email generado con éxito. Costo: ver AIAuditLog")
+        
+        # Aquí iría la lógica para enviar el email real (integrations/sendgrid, etc.)
+        
+    except Exception as e:
+        logger.error(f"Fallo al generar email con IA: {e}")
+
+def handle_ai_generation_completed(event):
+    """
+    Consumidor del evento de IA. Actualiza el Billing.
+    """
+    payload = event.payload
+    logger.info(f"Registrando consumo de IA: {payload['cost_usd']} USD para Tenant {event.tenant_id}")
+    
+    # Aquí llamarías a: apps.billing.services.record_usage(event.tenant_id, payload['cost_usd'])
