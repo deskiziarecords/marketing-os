@@ -1,0 +1,55 @@
+[project]
+name = "marketing-os"
+version = "0.1.0"
+description = "Marketing Operating System SaaS"
+requires-python = ">=3.12"
+dependencies = [
+    # Core Django
+    "django>=5.0",
+    "django-environ>=0.11.2",      # Manejo de .env
+    "psycopg[binary]>=3.1.19",     # Driver de Postgres (el binario evita compilar C)
+    
+    # API & Web
+    "django-ninja>=1.1.0",         # API framework rápido y moderno (alternativa ligera a DRF)
+    "django-cors-headers>=4.3.1",
+    
+    # Multi-tenancy & Utils
+    "django-tenants>=3.7.0",       # Aislamiento por esquemas de Postgres
+    "django-waffle>=4.1.0",        # Feature Flags
+    
+    # Tareas Asíncronas
+    "celery>=5.3.6",
+    "redis>=5.0.1",
+    
+    # IA & RAG
+    "litellm>=1.35.0",             # Unifica costos y llamadas a OpenAI, Anthropic, etc.
+    "langchain>=0.1.12",
+    "langchain-community>=0.0.28",
+    "pgvector>=0.2.5",             # Soporte para vectores en Postgres
+    "unstructured[pdf,docx]>=0.12.6", # Ingesta de documentos para RAG
+    
+    # Pagos
+    "dj-stripe>=2.8.3",
+    "stripe>=8.0.0",
+    
+    # Utilidades
+    "pillow>=10.2.0",              # Manejo de imágenes
+    "pydantic>=2.6.4",             # Validación de datos
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.1.1",
+    "pytest-django>=4.8.0",
+    "factory-boy>=3.3.0",
+    "ruff>=0.3.4",                 # Linter y formateador ultrarrápido (también de Astral)
+    "ipython>=8.22.2",             # Shell mejorado
+]
+
+[tool.uv]
+# Configuración específica de uv
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
