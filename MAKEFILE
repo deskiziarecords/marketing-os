@@ -1,0 +1,35 @@
+.PHONY: install run migrate shell celery worker test format
+
+# Instala Python (si no está) y todas las dependencias en un venv aislado
+install:
+	uv python install
+	uv sync --all-extras
+
+# Ejecuta el servidor de desarrollo
+run:
+	uv run python manage.py runserver
+
+# Hace las migraciones de la base de datos
+migrate:
+	uv run python manage.py migrate
+
+# Abre el shell de Django con IPython (si está instalado)
+shell:
+	uv run python manage.py shell_plus
+
+# Inicia el worker de Celery para tareas en segundo plano
+worker:
+	uv run celery -A config worker -l info --pool=solo
+
+# Inicia Celery Beat para tareas programadas (Scheduler)
+beat:
+	uv run celery -A config beat -l info
+
+# Ejecuta los tests
+test:
+	uv run pytest
+
+# Formatea y limpia el código automáticamente con Ruff
+format:
+	uv run ruff format .
+	uv run ruff check . --fix
