@@ -53,3 +53,12 @@ package = false
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+python_files = ["test_*.py"]
+testpaths = ["tests"]
+addopts = ["-p", "no:langsmith"]
+filterwarnings = [
+    "ignore::RuntimeWarning",
+]
